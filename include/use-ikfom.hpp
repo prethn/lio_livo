@@ -19,7 +19,7 @@ struct state_ikfom
 {
 	Eigen::Vector3d pos = Eigen::Vector3d(0,0,0);
 	Sophus::SO3 rot = Sophus::SO3(Eigen::Matrix3d::Identity());
-	Sophus::SO3 offset_R_L_I = Sophus::SO3(Eigen::Matrix3d::Identity());
+	Sophus::SO3 offset_R_L_I = Sophus::SO3(Eigen::Matrix3d::Identity()); 
 	Eigen::Vector3d offset_T_L_I = Eigen::Vector3d(0,0,0);
 	Eigen::Vector3d vel = Eigen::Vector3d(0,0,0);
 	Eigen::Vector3d bg = Eigen::Vector3d(0,0,0);

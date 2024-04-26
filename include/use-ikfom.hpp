@@ -22,10 +22,10 @@ struct state_ikfom
 	Sophus::SO3 offset_R_L_I = Sophus::SO3(Eigen::Matrix3d::Identity()); 
 	Eigen::Vector3d offset_T_L_I = Eigen::Vector3d(0,0,0);
 	Eigen::Vector3d vel = Eigen::Vector3d(0,0,0);
-	Eigen::Vector3d bg = Eigen::Vector3d(0,0,0);
-	Eigen::Vector3d ba = Eigen::Vector3d(0,0,0);
+	Eigen::Vector3d bg = Eigen::Vector3d(0,0,0); // 角速度 bias
+	Eigen::Vector3d ba = Eigen::Vector3d(0,0,0); // 加速度 bias
 	Eigen::Vector3d grav = Eigen::Vector3d(0,0,-G_m_s2);
-};
+} ;
 
 
 //输入u
@@ -36,7 +36,7 @@ struct input_ikfom
 };
 
 
-//噪声协方差Q的初始化(对应公式(8)的Q, 在IMU_Processing.hpp中使用)
+//噪声协方差Q的初始化(对应公式(8)的Q, 在IMU_Processing.hpp中使用)  // 过程噪声协方差
 Eigen::Matrix<double, 12, 12> process_noise_cov()
 {
 	Eigen::Matrix<double, 12, 12> Q = Eigen::MatrixXd::Zero(12, 12);
@@ -47,7 +47,8 @@ Eigen::Matrix<double, 12, 12> process_noise_cov()
 
 	return Q;
 }
-
+// R 是观测噪声协方差
+// H 是观测模型矩阵
 //对应公式(2) 中的f
 Eigen::Matrix<double, 24, 1> get_f(state_ikfom s, input_ikfom in)	
 {
@@ -70,7 +71,7 @@ Eigen::Matrix<double, 24, 1> get_f(state_ikfom s, input_ikfom in)
 Eigen::Matrix<double, 24, 24> df_dx(state_ikfom s, input_ikfom in)
 {
 	Eigen::Matrix<double, 24, 24> cov = Eigen::Matrix<double, 24, 24>::Zero();
-	cov.block<3, 3>(0, 12) = Eigen::Matrix3d::Identity();	//对应公式(7)第2行第3列   I
+	cov.block<3, 3>(0, 12) = Eigen::Matrix3d::Identity();	//对应公式(7)第2行第3列   I  PROBLEM_ME: 位置(0, 12) 和公式对不上
 	Eigen::Vector3d acc_ = in.acc - s.ba;   	//测量加速度 = a_m - bias	
 
 	cov.block<3, 3>(12, 3) = -s.rot.matrix() * Sophus::SO3::hat(acc_);		//对应公式(7)第3行第1列

@@ -179,9 +179,9 @@ namespace esekfom
 			for (int i = 0; i < effct_feat_num; i++)
 			{
 				V3D point_(laserCloudOri->points[i].x, laserCloudOri->points[i].y, laserCloudOri->points[i].z);
-				M3D point_crossmat;
+				M3D point_crossmat;  //  处理一个点就相当于处理一个向量
 				point_crossmat << SKEW_SYM_MATRX(point_);
-				V3D point_I_ = x_.offset_R_L_I * point_ + x_.offset_T_L_I;
+				V3D point_I_ = x_.offset_R_L_I * point_ + x_.offset_T_L_I; // 转到IMU坐标系下
 				M3D point_I_crossmat;
 				point_I_crossmat << SKEW_SYM_MATRX(point_I_);
 
@@ -268,7 +268,7 @@ namespace esekfom
 				KH.block<24, 12>(0, 0) = K * H;
 				Matrix<double, 24, 1> dx_ = K * dyn_share.h + (KH - Matrix<double, 24, 24>::Identity()) * dx_new; //公式(18)
 				// std::cout << "dx_: " << dx_.transpose() << std::endl;
-				x_ = boxplus(x_, dx_); //公式(18)
+				x_ = boxplus(x_, dx_); //公式(18)  // 优化后位姿输出
 
 				dyn_share.converge = true;
 				for (int j = 0; j < 24; j++)

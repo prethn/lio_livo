@@ -146,7 +146,7 @@ void ImuProcess::IMU_init(const MeasureGroup &meas, esekfom::esekf &kf_state, in
     cur_acc << imu_acc.x, imu_acc.y, imu_acc.z;
     cur_gyr << gyr_acc.x, gyr_acc.y, gyr_acc.z;
 
-    mean_acc  += (cur_acc - mean_acc) / N;    //根据当前帧和均值差作为均值的更新
+    mean_acc  += (cur_acc - mean_acc) / N;    //根据当前帧和均值差作为均值的迭代更新
     mean_gyr  += (cur_gyr - mean_gyr) / N;
 
     cov_acc = cov_acc * (N - 1.0) / N + (cur_acc - mean_acc).cwiseProduct(cur_acc - mean_acc)  / N;
@@ -178,6 +178,7 @@ void ImuProcess::IMU_init(const MeasureGroup &meas, esekfom::esekf &kf_state, in
 //反向传播
 void ImuProcess::UndistortPcl(const MeasureGroup &meas, esekfom::esekf &kf_state, PointCloudXYZI &pcl_out)
 {
+    // 在IMU打包的时候，两帧IMU之间最后一帧时间必须比上一帧lidar时间大 （| 。。。。|。）  | lidar   。IMU
   /***将上一帧最后尾部的imu添加到当前帧头部的imu ***/
   auto v_imu = meas.imu;         //取出当前帧的IMU队列
   v_imu.push_front(last_imu_);   //将上一帧最后尾部的imu添加到当前帧头部的imu
@@ -187,7 +188,7 @@ void ImuProcess::UndistortPcl(const MeasureGroup &meas, esekfom::esekf &kf_state
   
   // 根据点云中每个点的时间戳对点云进行重排序
   pcl_out = *(meas.lidar);
-  sort(pcl_out.points.begin(), pcl_out.points.end(), time_list);  //这里curvature中存放了时间戳（在preprocess.cpp中）
+  sort(pcl_out.points.begin(), pcl_out.points.end(), time_list);  //这里curvature中存放了时间戳（在preprocess.cpp：134 中）
 
 
   state_ikfom imu_state = kf_state.get_x();  // 获取上一次KF估计的后验状态作为本次IMU预测的初始状态
@@ -220,7 +221,7 @@ void ImuProcess::UndistortPcl(const MeasureGroup &meas, esekfom::esekf &kf_state
     acc_avr  = acc_avr * G_m_s2 / mean_acc.norm(); //通过重力数值对加速度进行调整(除上初始化的IMU大小*9.8)
 
     //如果IMU开始时刻早于上次雷达最晚时刻(因为将上次最后一个IMU插入到此次开头了，所以会出现一次这种情况)
-    if(head->header.stamp.toSec() < last_lidar_end_time_)
+    if(head->header.stamp.toSec() < last_lidar_end_time_) //( |.....|) |lidar .imu
     {
       dt = tail->header.stamp.toSec() - last_lidar_end_time_; //从上次雷达时刻末尾开始传播 计算与此次IMU结尾之间的时间差
     }
@@ -244,11 +245,13 @@ void ImuProcess::UndistortPcl(const MeasureGroup &meas, esekfom::esekf &kf_state
     //更新上一帧世界坐标系下的加速度 = R*(加速度-bias) - g
     acc_s_last  = V3D(tail->linear_acceleration.x, tail->linear_acceleration.y, tail->linear_acceleration.z) * G_m_s2 / mean_acc.norm();   
 
-    // std::cout << "acc_s_last: " << acc_s_last.transpose() << std::endl;
-    // std::cout << "imu_state.ba: " << imu_state.ba.transpose() << std::endl;
-    // std::cout << "imu_state.grav: " << imu_state.grav.transpose() << std::endl;
-    acc_s_last = imu_state.rot * (acc_s_last - imu_state.ba) + imu_state.grav;
-    // std::cout << "--acc_s_last: " << acc_s_last.transpose() << std::endl<< std::endl;
+    std::cout << "acc_s_last: " << acc_s_last.transpose() << std::endl;
+    std::cout << "imu_state.ba: " << imu_state.ba.transpose() << std::endl;
+    std::cout << "imu_state.grav: " << imu_state.grav.transpose() << std::endl;
+
+    acc_s_last = imu_state.rot * (acc_s_last - imu_state.ba) + imu_state.grav; // 公式3
+
+    std::cout << "--acc_s_last: " << acc_s_last.transpose() << std::endl<< std::endl;
 
     double &&offs_t = tail->header.stamp.toSec() - pcl_beg_time;    //后一个IMU时刻距离此次雷达开始的时间间隔
     IMUpose.push_back( set_pose6d( offs_t, acc_s_last, angvel_last, imu_state.vel, imu_state.pos, imu_state.rot.matrix() ) );
@@ -289,7 +292,9 @@ void ImuProcess::UndistortPcl(const MeasureGroup &meas, esekfom::esekf &kf_state
       
       V3D P_i(it_pcl->x, it_pcl->y, it_pcl->z);   //点所在时刻的位置(雷达坐标系下)
       V3D T_ei(pos_imu + vel_imu * dt + 0.5 * acc_imu * dt * dt - imu_state.pos);   //从点所在的世界位置-雷达末尾世界位置
-      V3D P_compensate = imu_state.offset_R_L_I.matrix().transpose() * (imu_state.rot.matrix().transpose() * (R_i * (imu_state.offset_R_L_I.matrix() * P_i + imu_state.offset_T_L_I) + T_ei) - imu_state.offset_T_L_I);
+      V3D P_compensate = imu_state.offset_R_L_I.matrix().transpose() * (imu_state.rot.matrix().transpose() \
+             * (R_i * (imu_state.offset_R_L_I.matrix() * P_i + imu_state.offset_T_L_I) + T_ei)  \
+             - imu_state.offset_T_L_I);
 
       it_pcl->x = P_compensate(0);
       it_pcl->y = P_compensate(1);

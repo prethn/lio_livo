@@ -113,7 +113,7 @@ void Preprocess::avia_handler(const livox_ros_driver::CustomMsg::ConstPtr &msg)
   for (int i = 0; i < N_SCANS; i++)
   {
     pl_buff[i].clear();
-    pl_buff[i].reserve(plsize);  // 每一个scan保存的点云数量
+    pl_buff[i].reserve(plsize);  // 每一个scan保存的点云数量  
   }
   uint valid_num = 0;   // 有效的点云数
 

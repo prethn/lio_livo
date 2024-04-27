@@ -87,12 +87,12 @@ namespace esekfom
 			Eigen::Matrix<double, 24, 24> f_x_ = df_dx(x_, i_in); //公式(7)的df/dx
 			Eigen::Matrix<double, 24, 12> f_w_ = df_dw(x_, i_in); //公式(7)的df/dw
 
-			x_ = boxplus(x_, f_ * dt); //前向传播 公式(4)
+			x_ = boxplus(x_, f_ * dt); //前向传播 公式(4) 
 
 			f_x_ = Matrix<double, 24, 24>::Identity() + f_x_ * dt; //之前Fx矩阵里的项没加单位阵，没乘dt   这里补上
 
 			P_ = (f_x_)*P_ * (f_x_).transpose() + (dt * f_w_) * Q * (dt * f_w_).transpose(); //传播协方差矩阵，即公式(8)
-		}
+		} 
 
 		//计算每个特征点的残差及H矩阵
 		void h_share_model(dyn_share_datastruct &ekfom_data, PointCloudXYZI::Ptr &feats_down_body,

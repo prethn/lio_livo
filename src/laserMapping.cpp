@@ -1780,6 +1780,7 @@ int main(int argc, char** argv)
         publish_effect_world(pubLaserCloudEffect);
         // publish_map(pubLaserCloudMap);
         publish_path(pubPath);
+ROSINFOOUT("while()结束……");
         #ifdef DEPLOY
         publish_mavros(mavros_pose_publisher);
         #endif
@@ -1819,7 +1820,6 @@ int main(int argc, char** argv)
             #endif
         }
         // dump_lio_state_to_log(fp);
-        ROSINFOOUT("while()结束……");
     }
     //--------------------------save map---------------
     // string surf_filename(map_file_path + "/surf.pcd");

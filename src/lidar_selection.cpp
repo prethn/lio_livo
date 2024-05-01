@@ -751,6 +751,7 @@ void LidarSelector::FeatureAlignment(cv::Mat img)
     }
 }
 
+// IMG 迭代更新
 float LidarSelector::UpdateState(cv::Mat img, float total_residual, int level) 
 {
     int total_points = sub_sparse_map->index.size();

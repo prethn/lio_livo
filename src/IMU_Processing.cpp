@@ -549,6 +549,7 @@ void ImuProcess::Process(const LidarMeasureGroup &lidar_meas,  esekfom::esekf<st
 #else
 void ImuProcess::Process(const LidarMeasureGroup &lidar_meas, StatesGroup &stat, PointCloudXYZI::Ptr cur_pcl_un_)
 {
+    ROSINFOOUT("1301 USE_IKFOM F B ======================");
   double t1,t2,t3;
   t1 = omp_get_wtime();
   ROS_ASSERT(lidar_meas.lidar != nullptr);
@@ -829,7 +830,7 @@ void ImuProcess::UndistortPcl(LidarMeasureGroup &lidar_meas, StatesGroup &state_
     }
   }
 }
-
+// 初始化IMU 以及前向传播和反向传播
 void ImuProcess::Process2(LidarMeasureGroup &lidar_meas, StatesGroup &stat, PointCloudXYZI::Ptr cur_pcl_un_)
 {
   double t1,t2,t3;

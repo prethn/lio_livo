@@ -1206,7 +1206,7 @@ int main(int argc, char** argv)
     extT<<VEC_FROM_ARRAY(extrinT);
     extR<<MAT_FROM_ARRAY(extrinR);
     Lidar_offset_to_IMU = extT;
-    
+     
     // pcl::PCLPointCloud2 是 PCL 中定义的一种点云数据结构，用于表示原始的、未组织的点云数据
     // LidarSelectorPtr : boost::shared_ptr<LidarSelector> 
     lidar_selection::LidarSelectorPtr lidar_selector(new lidar_selection::LidarSelector(grid_size, new SparseMap));
@@ -1270,7 +1270,7 @@ int main(int argc, char** argv)
     signal(SIGINT, SigHandle);
     ros::Rate rate(5000);
     bool status = ros::ok();
-    ROSINFOOUT("while()开始……");
+    ROSINFOOUT("while()开始  ]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]");
     while (status)
     {
         if (flg_exit) break;
@@ -1298,6 +1298,7 @@ int main(int argc, char** argv)
         match_time = kdtree_search_time = kdtree_search_counter = solve_time = solve_const_H_time = svd_time   = 0;
         t0 = omp_get_wtime();
         #ifdef USE_IKFOM
+        ROSINFOOUT("1301 USE_IKFOM");
         p_imu->Process(LidarMeasures, kf, feats_undistort);
         state_point = kf.get_x();
         pos_lid = state_point.pos + state_point.rot * state_point.offset_T_L_I;

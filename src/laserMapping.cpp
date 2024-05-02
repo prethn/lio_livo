@@ -1303,6 +1303,7 @@ int main(int argc, char** argv)
         state_point = kf.get_x();
         pos_lid = state_point.pos + state_point.rot * state_point.offset_T_L_I;
         #else
+        ROSINFOOUT("1306  NO_USE_IKFOM");
         p_imu->Process2(LidarMeasures, state, feats_undistort); 
         state_propagat = state;
         #endif

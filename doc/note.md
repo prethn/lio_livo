@@ -8,3 +8,5 @@ int debug = 1;
 bool fast_lio_is_ready = true;
 
 launch-prefix="xterm -geometry 80x24 -fa 'Monospace' -fs 12  -e gdb -ex run --args"
+
+DON'T USE THIS CODE！！！

@@ -341,6 +341,7 @@ namespace lidar_selection
 }
 typedef boost::shared_ptr<SparseMap> SparseMapPtr;
 
+// 论文中18维数据+ states covariance
 struct StatesGroup
 {
     StatesGroup() {

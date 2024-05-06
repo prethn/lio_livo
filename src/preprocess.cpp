@@ -77,11 +77,11 @@ void Preprocess::avia_handler(const livox_ros_driver::CustomMsg::ConstPtr &msg)
   pl_surf.reserve(plsize);
   pl_full.resize(plsize);
 
-  for(int i=0; i<N_SCANS; i++)
-  {
-    pl_buff[i].clear();
-    pl_buff[i].reserve(plsize);
-  }
+//   for(int i=0; i<N_SCANS; i++)
+//   {
+//     pl_buff[i].clear();
+//     pl_buff[i].reserve(plsize);
+//   }
 
   if (feature_enabled)
   {

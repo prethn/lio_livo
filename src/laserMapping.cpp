@@ -1273,7 +1273,7 @@ int main(int argc, char** argv)
     signal(SIGINT, SigHandle);
     ros::Rate rate(5000);
     bool status = ros::ok();
-    ROSINFO1("while() 开始……");
+    ROSINFO1("while() 开始-----------------------------");
     while (status)
     {
         if (flg_exit) break;
@@ -1305,7 +1305,7 @@ int main(int argc, char** argv)
         state_point = kf.get_x();
         pos_lid = state_point.pos + state_point.rot * state_point.offset_T_L_I;
         #else
-        p_imu->Process2(LidarMeasures, state, feats_undistort); 
+        p_imu->Process2(LidarMeasures, state, feats_undistort);  // IMU初始化 前向传播与后向传播
         state_propagat = state;
         #endif
 
@@ -1333,7 +1333,7 @@ int main(int argc, char** argv)
         fast_lio_is_ready = true;
         flg_EKF_inited = (LidarMeasures.lidar_beg_time - first_lidar_time) < INIT_TIME ? \
                         false : true;
-
+// img HERE
         if (! LidarMeasures.is_lidar_end) 
         {
             cout<<"[ VIO ]: Raw feature num: "<<pcl_wait_pub->points.size() << "." << endl;
@@ -1414,15 +1414,17 @@ int main(int argc, char** argv)
             // 雷达
         ROSINFO1("Mid ==================================");
         /*** S egment the map in lidar FOV ***/
-        #ifndef USE_ikdforest            
+        #ifndef USE_ikdforest       // no Use
+        ROSINFO1("1418 USE_ikdforest");     
             lasermap_fov_segment();
         #endif 
         /*** downsample the feature points in a scan ***/
         downSizeFilterSurf.setInputCloud(feats_undistort);
         downSizeFilterSurf.filter(*feats_down_body);
     #ifdef USE_ikdtree
+        ROSINFO1("1424  USE_ikdtree");
         /*** initialize the map kdtree ***/
-        #ifdef USE_ikdforest
+        #ifdef USE_ikdforest // no Use
         if (!ikdforest.initialized){
             if(feats_down_body->points.size() > 5){
                 ikdforest.Build(feats_down_body->points, true, lidar_end_time);

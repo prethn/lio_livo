@@ -1362,7 +1362,7 @@ int main(int argc, char** argv)
                 //     pointBodyToWorld(&feats_undistort->points[i], \
                 //                         &laserCloudWorld->points[i]);
                 // }
-                // 去除奇异点
+                
                 lidar_selector->detect(LidarMeasures.measures.back().img, pcl_wait_pub);
                 // int size = lidar_selector->map_cur_frame_.size();
                 int size_sub = lidar_selector->sub_map_cur_frame_.size();

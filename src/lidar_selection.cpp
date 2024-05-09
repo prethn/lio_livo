@@ -769,6 +769,7 @@ float LidarSelector::UpdateState(cv::Mat img, float total_residual, int level)
     const int H_DIM = total_points * patch_size_total;
     
     // K.resize(H_DIM, H_DIM);
+    // z -> vectorXd
     z.resize(H_DIM);
     z.setZero();
     // R.resize(H_DIM);
@@ -776,9 +777,10 @@ float LidarSelector::UpdateState(cv::Mat img, float total_residual, int level)
 
     // H.resize(H_DIM, DIM_STATE);
     // H.setZero();
+    // h_sub-> MatrixXd
     H_sub.resize(H_DIM, 6);
     H_sub.setZero();
-    
+    // NUM_MAX_ITERATIONS=4
     for (int iteration=0; iteration<NUM_MAX_ITERATIONS; iteration++) 
     {
         // double t1 = omp_get_wtime();
@@ -786,7 +788,7 @@ float LidarSelector::UpdateState(cv::Mat img, float total_residual, int level)
      
         error = 0.0;
         propa_error = 0.0;
-        n_meas_ =0;
+        n_meas_ =0; // Number of measurements
         M3D Rwi(state->rot_end);
         V3D Pwi(state->pos_end);
         Rcw = Rci * Rwi.transpose();

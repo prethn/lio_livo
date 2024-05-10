@@ -108,7 +108,7 @@ class LidarSelector {
       const Vector2d& px_ref,
       const int level_ref,
       const int search_level,
-      const int pyramid_level,
+      const int pyramid_level, 
       const int halfpatch_size,
       float* patch);
     

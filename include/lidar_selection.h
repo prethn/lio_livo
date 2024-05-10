@@ -51,6 +51,7 @@ class LidarSelector {
     int frame_cont = 1;
     vk::robust_cost::ScaleEstimatorPtr scale_estimator_;
 
+    // DIM_STATE=18
     Matrix<double, DIM_STATE, DIM_STATE> G, H_T_H;
     MatrixXd H_sub, K;
     cv::flann::Index Kdtree;
@@ -114,7 +115,10 @@ class LidarSelector {
     PointCloudXYZI::Ptr Map_points;
     PointCloudXYZI::Ptr Map_points_output;
     PointCloudXYZI::Ptr pg_down;
+    // 体素网格滤波器，减少点云中的点数
     pcl::VoxelGrid<PointType> downSizeFilter;
+    // 无序映射 （键值对）（hash ）
+    // 键的类型(点坐标)  ---------- 值的类型（点的所有信息）
     unordered_map<VOXEL_KEY, VOXEL_POINTS*> feat_map;
     unordered_map<VOXEL_KEY, float> sub_feat_map; //timestamp
     unordered_map<int, Warp*> Warp_map; // reference frame id, A_cur_ref and search_level

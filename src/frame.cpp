@@ -72,9 +72,13 @@ void Frame::addFeature(FeaturePtr ftr)
 void Frame::setKeyPoints()
 {
   for(size_t i = 0; i < 5; ++i)
+        //   五个特征和关联的 3D 点，用于检测两个帧是否具有重叠的视野
+        //  key_pts_：  Five features and associated 3D points 
+        // which are used to detect if two frames have overlapping field of view.
     if(key_pts_[i] != nullptr)
       if(key_pts_[i]->point == nullptr)
         key_pts_[i] = nullptr;
+    // 遍历fts_，检查当前元素指向的指针是否不为空，如果不为空，则调用checkKeyPoints函数对该元素进行处理
   std::for_each(fts_.begin(), fts_.end(), [&](FeaturePtr ftr){ if(ftr->point != nullptr) checkKeyPoints(ftr); });
 }
 
@@ -86,21 +90,24 @@ void Frame::checkKeyPoints(FeaturePtr ftr)
   // center pixel
   if(key_pts_[0] == nullptr)
     key_pts_[0] = ftr;
-
+// 传进来的特征点坐标到坐标轴最大距离小于 key_pts_[0] 的，则 key_pts_去当前传进来的点
   else if(std::max(std::fabs(ftr->px[0]-cu), std::fabs(ftr->px[1]-cv))
         < std::max(std::fabs(key_pts_[0]->px[0]-cu), std::fabs(key_pts_[0]->px[1]-cv)))
-    key_pts_[0] = ftr;
+    key_pts_[0] = ftr; // 会动
 
-  if(ftr->px[0] >= cu && ftr->px[1] >= cv)
+  if(ftr->px[0] >= cu && ftr->px[1] >= cv)// 2
   {
     if(key_pts_[1] == nullptr)
-      key_pts_[1] = ftr;
+      key_pts_[1] = ftr; // 不动 （原来）
+    // PROBLEM_ME
+    // 目的是什么呢，也不是找距离中心最小的点，而是找面积最大的点
+    //   新进来的点围城面积大于 原来点围城面积 则将新传进来的点更新为  不动（原来）
     else if((ftr->px[0]-cu) * (ftr->px[1]-cv)
           > (key_pts_[1]->px[0]-cu) * (key_pts_[1]->px[1]-cv))
       key_pts_[1] = ftr;
   }
 
-  if(ftr->px[0] >= cu && ftr->px[1] < cv)
+  if(ftr->px[0] >= cu && ftr->px[1] < cv) // 4
   {
     if(key_pts_[2] == nullptr)
       key_pts_[2] = ftr;
@@ -111,7 +118,7 @@ void Frame::checkKeyPoints(FeaturePtr ftr)
       key_pts_[2] = ftr;
   }
 
-  if(ftr->px[0] < cu && ftr->px[1] < cv)
+  if(ftr->px[0] < cu && ftr->px[1] < cv) //3
   {
     if(key_pts_[3] == nullptr)
       key_pts_[3] = ftr;
@@ -120,7 +127,7 @@ void Frame::checkKeyPoints(FeaturePtr ftr)
       key_pts_[3] = ftr;
   }
 
-  if(ftr->px[0] < cu && ftr->px[1] >= cv)  
+  if(ftr->px[0] < cu && ftr->px[1] >= cv)   //1
   // if(ftr->px[0] < cv && ftr->px[1] >= cv)
   {
     if(key_pts_[4] == nullptr)

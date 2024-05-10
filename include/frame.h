@@ -194,6 +194,7 @@ typedef std::shared_ptr<Frame> FramePtr;
 /// Some helper functions for the frame object.
 namespace frame_utils {
 
+// 创建一个由半采样的图像组成的图像金字塔。
 /// Creates an image pyramid of half-sampled images.
 void createImgPyramid(const cv::Mat& img_level_0, int n_levels, ImgPyr& pyr);
 

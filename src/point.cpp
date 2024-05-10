@@ -148,7 +148,7 @@ bool Point::getCloseViewObs(const Vector3d& framepos, FeaturePtr& ftr, const Vec
   double min_cos_angle = 0;
 
   for(auto it=obs_.begin(), ite=obs_.end(); it!=ite; ++it)
-  {
+  { // it 到pos_ 的单位向量
     Vector3d dir((*it)->T_f_w_.inverse().translation() - pos_); dir.normalize();
     double cos_angle = obs_dir.dot(dir);
     if(cos_angle > min_cos_angle)

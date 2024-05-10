@@ -216,6 +216,7 @@ bool Point::getCloseViewObs_test(const Vector3d& framepos, FeaturePtr& ftr, cons
   return true;
 }
 
+// 获取与给定帧位置 framepos 最远的观测特征点 （特征点在 obs_）
 void Point::getFurthestViewObs(const Vector3d& framepos, FeaturePtr& ftr) const
 {
   // Vector3d obs_dir(framepos - pos_); obs_dir.normalize();
@@ -231,8 +232,9 @@ void Point::getFurthestViewObs(const Vector3d& framepos, FeaturePtr& ftr) const
   //     max_it = it;
   //   }
   // }
+//   观测方向向量
   Vector3d obs_dir(framepos - pos_); obs_dir.normalize();
-  auto max_it=obs_.begin();
+  auto max_it=obs_.begin(); // 观测特征点集合obs_
   double maxdist = 0.0;
   for(auto it=obs_.begin(), ite=obs_.end(); it!=ite; ++it)
   {

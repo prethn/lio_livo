@@ -34,18 +34,25 @@ struct Feature
   };
   int id_;
   FeatureType type;     //!< Type can be corner or edgelet.
+
+//   指向检测到特征的帧的指针。
   Frame* frame;         //!< Pointer to frame in which the feature was detected.
   cv::Mat img;
   vector<cv::Mat> ImgPyr;
+//   像素坐标系下金字塔层级0
   Vector2d px;          //!< Coordinates in pixels on pyramid level 0.
+
+//   特征的单位方位向量。
   Vector3d f;           //!< Unit-bearing vector of the feature.
   int level;            //!< Image pyramid level where feature was extracted.
+//   指向与特征对应的 3D 点的指针。
   PointPtr point;         //!< Pointer to 3D point which corresponds to the feature.
+//   小边的主梯度方向，已标准化。
   Vector2d grad;        //!< Dominant gradient direction for edglets, normalized.
   float score;
   float error;
   // Vector2d grad_cur_;   //!< edgelete grad direction in cur frame 
-  SE3 T_f_w_;
+  SE3 T_f_w_;  // 特征点在世界坐标系中的变换
   float* patch;
   Feature(float* _patch, const Vector2d& _px, const Vector3d& _f, const SE3& _T_f_w, const float &_score, int _level) :
     type(CORNER),

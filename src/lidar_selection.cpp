@@ -54,6 +54,7 @@ void LidarSelector::init()
     Jdp_dR = -Rci * tmp;
     width = cam->width();
     height = cam->height();
+    // 每个像素长度和宽度
     grid_n_width = static_cast<int>(width/grid_size);
     grid_n_height = static_cast<int>(height/grid_size);
     length = grid_n_width * grid_n_height;
@@ -69,8 +70,8 @@ void LidarSelector::init()
     memset(map_value, 0, sizeof(float)*length);
     voxel_points_.reserve(length);
     add_voxel_points_.reserve(length);
-    count_img = 0;
-    patch_size_total = patch_size * patch_size;
+    count_img = 0; 
+    patch_size_total = patch_size * patch_size; // patch_size 8
     patch_size_half = static_cast<int>(patch_size/2);
     patch_cache = new float[patch_size_total];
     stage_ = STAGE_FIRST_FRAME;
@@ -144,7 +145,7 @@ void LidarSelector::getpatch(cv::Mat img, V2D pc, float* patch_tmp, int level)
         }
     }
 }
-
+// 找到角点，将其添加到 feat_map hash 中
 void LidarSelector::addSparseMap(cv::Mat img, PointCloudXYZI::Ptr pg) 
 {
     // double t0 = omp_get_wtime();
@@ -153,28 +154,32 @@ void LidarSelector::addSparseMap(cv::Mat img, PointCloudXYZI::Ptr pg)
     // double t_b1 = omp_get_wtime() - t0;
     // t0 = omp_get_wtime();
     
+    // 找到 pg 里面比较好的角点，更改其属性
     for (int i=0; i<pg->size(); i++) 
     {
         V3D pt(pg->points[i].x, pg->points[i].y, pg->points[i].z);
         V2D pc(new_frame_->w2c(pt));
         if(new_frame_->cam_->isInFrame(pc.cast<int>(), (patch_size_half+1)*8)) // 20px is the patch size in the matcher
-        {
+        { // grid_size  40
             int index = static_cast<int>(pc[0]/grid_size)*grid_n_height + static_cast<int>(pc[1]/grid_size);
             // float cur_value = CheckGoodPoints(img, pc);
+
+            // shiTomasiScore 评估图像中某个像素是否为稳定角点的一个量度
             float cur_value = vk::shiTomasiScore(img, pc[0], pc[1]);
 
             if (cur_value > map_value[index]) //&& (grid_num[index] != TYPE_MAP || map_value[index]<=10)) //! only add in not occupied grid
             {
                 map_value[index] = cur_value;
                 add_voxel_points_[index] = pt;
-                grid_num[index] = TYPE_POINTCLOUD;
+                grid_num[index] = TYPE_POINTCLOUD;//对应点被更改为 TYPE_POINTCLOUD
             }
         }
     }
 
     // double t_b2 = omp_get_wtime() - t0;
     // t0 = omp_get_wtime();
-    
+
+    // 遍历整个patch,(处理标记过的点) , 对标记过得点进行特征提取并添加到 feat_map
     int add=0;
     for (int i=0; i<length; i++) 
     {
@@ -183,20 +188,21 @@ void LidarSelector::addSparseMap(cv::Mat img, PointCloudXYZI::Ptr pg)
             V3D pt = add_voxel_points_[i];
             V2D pc(new_frame_->w2c(pt));
             float* patch = new float[patch_size_total*3];
-            getpatch(img, pc, patch, 0);
+            getpatch(img, pc, patch, 0); // 获取img中pc像素点第（0）层的补丁，返回 patch
             getpatch(img, pc, patch, 1);
             getpatch(img, pc, patch, 2);
             PointPtr pt_new(new Point(pt));
             Vector3d f = cam->cam2world(pc);
             FeaturePtr ftr_new(new Feature(patch, pc, f, new_frame_->T_f_w_, map_value[i], 0));
-            ftr_new->img = new_frame_->img_pyr_[0];
+            ftr_new->img = new_frame_->img_pyr_[0]; // 后面两个没有初始化
             // ftr_new->ImgPyr.resize(5);
             // for(int i=0;i<5;i++) ftr_new->ImgPyr[i] = new_frame_->img_pyr_[i];
             ftr_new->id_ = new_frame_->id_;
 
+            // 将 ftr_new 添加到 对观察点的关键帧的引用 pt_new 前面。
             pt_new->addFrameRef(ftr_new);
             pt_new->value = map_value[i];
-            AddPoint(pt_new);
+            AddPoint(pt_new);// pt_new 添加到 hash 体素 feat_map 中
             add += 1;
         }
     }
@@ -210,6 +216,7 @@ void LidarSelector::addSparseMap(cv::Mat img, PointCloudXYZI::Ptr pg)
     // printf("B3. : %.6lf \n", t_b3);
 }
 
+// 找到对应体素位置，查hash ,存在 添加，不存在创建新体素
 void LidarSelector::AddPoint(PointPtr pt_new)
 {
     V3D pt_w(pt_new->pos_[0], pt_new->pos_[1], pt_new->pos_[2]);
@@ -237,6 +244,7 @@ void LidarSelector::AddPoint(PointPtr pt_new)
       feat_map[position] = ot;
     }
 }
+
 // 计算从参考图像到当前图像的仿射变换矩阵
 void LidarSelector::getWarpMatrixAffine(
     const vk::AbstractCamera& cam,
@@ -265,6 +273,7 @@ void LidarSelector::getWarpMatrixAffine(
   A_cur_ref.col(0) = (px_du - px_cur)/halfpatch_size;
   A_cur_ref.col(1) = (px_dv - px_cur)/halfpatch_size; //变换矩阵
 }
+
 // 逆变换矩阵和参考帧像素点坐标计算当前帧对应像素点坐标,判断越界
 void LidarSelector::warpAffine(
     const Matrix2d& A_cur_ref,
@@ -797,7 +806,7 @@ float LidarSelector::UpdateState(cv::Mat img, float total_residual, int level)
     // h_sub-> MatrixXd
     H_sub.resize(H_DIM, 6);
     H_sub.setZero();
-    // NUM_MAX_ITERATIONS=4
+    // NUM_MAX_ITERATIONS 4
     for (int iteration=0; iteration<NUM_MAX_ITERATIONS; iteration++) 
     {
         // double t1 = omp_get_wtime();
@@ -942,7 +951,7 @@ void LidarSelector::updateFrameState(StatesGroup state)
 }
 
 void LidarSelector::addObservation(cv::Mat img)
-{
+{   
     int total_points = sub_sparse_map->index.size();
     if (total_points==0) return;
 
@@ -962,6 +971,7 @@ void LidarSelector::addObservation(cv::Mat img)
 
             //TODO: condition: distance and view_angle 
             // Step 1: time
+            // 观察点关键帧
             FeaturePtr last_feature =  pt->obs_.back();
             // if(new_frame_->id_ >= last_feature->id_ + 20) add_flag = true;
 
@@ -979,14 +989,14 @@ void LidarSelector::addObservation(cv::Mat img)
             
             // Maintain the size of 3D Point observation features.
             if(pt->obs_.size()>=20)
-            {
+            { //超过一定数量删除最远的特征点 (obs_)
                 FeaturePtr ref_ftr;
-                pt->getFurthestViewObs(new_frame_->pos(), ref_ftr);
-                pt->deleteFeatureRef(ref_ftr);
+                pt->getFurthestViewObs(new_frame_->pos(), ref_ftr); 
+                pt->deleteFeatureRef(ref_ftr); // 从 obs_ 里面删除 ref_ftr
                 // ROS_WARN("ref_ftr->id_ is %d", ref_ftr->id_);
             } 
             if(add_flag)
-            {
+            { // 添加新的特征点到 obs_
                 pt->value = vk::shiTomasiScore(img, pc[0], pc[1]);
                 Vector3d f = cam->cam2world(pc);
                 FeaturePtr ftr_new(new Feature(patch_temp, pc, f, new_frame_->T_f_w_, pt->value, sub_sparse_map->search_levels[i])); 
@@ -1018,6 +1028,7 @@ void LidarSelector::ComputeJ(cv::Mat img)
     updateFrameState(*state);
 }
 
+// 在图像上绘制关键点 显示帧率
 void LidarSelector::display_keypatch(double time)
 {
     int total_points = sub_sparse_map->index.size();
@@ -1083,11 +1094,11 @@ void LidarSelector::detect(cv::Mat img, PointCloudXYZI::Ptr pg)
     }
 
     double t1 = omp_get_wtime();
-
+// 降采样之后找出与当前视角近的点，剔除深度不连续的点，添加到hash里面 sub_sparse_map / sub_map_cur_frame_
     addFromSparseMap(img, pg);
 
     double t3 = omp_get_wtime();
-
+// 对pg里面的点提取出角点， 进行特征提取 然后添加到 feat_map 中
     addSparseMap(img, pg);
 
     double t4 = omp_get_wtime();
@@ -1097,7 +1108,7 @@ void LidarSelector::detect(cv::Mat img, PointCloudXYZI::Ptr pg)
     ComputeJ(img);
 
     double t5 = omp_get_wtime();
-
+// 维护观察点数量 20 个以内
     addObservation(img);
     
     double t2 = omp_get_wtime();

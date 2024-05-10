@@ -1105,7 +1105,7 @@ void readParameters(ros::NodeHandle &nh)
     nh.param<int>("img_enable",img_en,1);
     nh.param<int>("lidar_enable",lidar_en,1);
     nh.param<int>("debug", debug, 0);
-    nh.param<int>("max_iteration",NUM_MAX_ITERATIONS,4);
+    nh.param<int>("max_iteration",4);
     nh.param<bool>("ncc_en",ncc_en,false);
     nh.param<int>("min_img_count",MIN_IMG_COUNT,1000);    
     nh.param<double>("cam_fx",cam_fx,453.483063);

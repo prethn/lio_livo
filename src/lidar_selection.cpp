@@ -127,7 +127,7 @@ void LidarSelector::getpatch(cv::Mat img, V2D pc, float* patch_tmp, int level)
 {
     const float u_ref = pc[0];
     const float v_ref = pc[1];
-    const int scale =  (1<<level);
+    const int scale =  (1<<level); // 2 * level
     const int u_ref_i = floorf(pc[0]/scale)*scale; 
     const int v_ref_i = floorf(pc[1]/scale)*scale;
     const float subpix_u_ref = (u_ref-u_ref_i)/scale;
@@ -829,7 +829,7 @@ float LidarSelector::UpdateState(cv::Mat img, float total_residual, int level)
             patch_error = 0.0;
             int search_level = sub_sparse_map->search_levels[i];
             int pyramid_level = level + search_level;
-            const int scale =  (1<<pyramid_level);
+            const int scale =  (1<<pyramid_level); // pyramid_level * 2
             
             PointPtr pt = sub_sparse_map->voxel_points[i];
 
@@ -862,11 +862,11 @@ float LidarSelector::UpdateState(cv::Mat img, float total_residual, int level)
                 {
                     // if((level==2 && iteration==0) || (level==1 && iteration==0) || level==0)
                     //{
-                    float du = 0.5f * ((w_ref_tl*img_ptr[scale] + w_ref_tr*img_ptr[scale*2] + w_ref_bl*img_ptr[scale*width+scale] + w_ref_br*img_ptr[scale*width+scale*2])
-                                -(w_ref_tl*img_ptr[-scale] + w_ref_tr*img_ptr[0] + w_ref_bl*img_ptr[scale*width-scale] + w_ref_br*img_ptr[scale*width]));
-                    float dv = 0.5f * ((w_ref_tl*img_ptr[scale*width] + w_ref_tr*img_ptr[scale+scale*width] + w_ref_bl*img_ptr[width*scale*2] + w_ref_br*img_ptr[width*scale*2+scale])
-                                -(w_ref_tl*img_ptr[-scale*width] + w_ref_tr*img_ptr[-scale*width+scale] + w_ref_bl*img_ptr[0] + w_ref_br*img_ptr[scale]));
-                    Jimg << du, dv;
+                    // float du = 0.5f * ((w_ref_tl*img_ptr[scale] + w_ref_tr*img_ptr[scale*2] + w_ref_bl*img_ptr[scale*width+scale] + w_ref_br*img_ptr[scale*width+scale*2])
+                    //             -(w_ref_tl*img_ptr[-scale] + w_ref_tr*img_ptr[0] + w_ref_bl*img_ptr[scale*width-scale] + w_ref_br*img_ptr[scale*width]));
+                    // float dv = 0.5f * ((w_ref_tl*img_ptr[scale*width] + w_ref_tr*img_ptr[scale+scale*width] + w_ref_bl*img_ptr[width*scale*2] + w_ref_br*img_ptr[width*scale*2+scale])
+                    //             -(w_ref_tl*img_ptr[-scale*width] + w_ref_tr*img_ptr[-scale*width+scale] + w_ref_bl*img_ptr[0] + w_ref_br*img_ptr[scale]));
+                    // Jimg << du, dv;
                     Jimg = Jimg * (1.0/scale);
                     Jdphi = Jimg * Jdpi * p_hat;
                     Jdp = -Jimg * Jdpi;

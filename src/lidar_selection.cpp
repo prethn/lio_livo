@@ -245,7 +245,7 @@ void LidarSelector::AddPoint(PointPtr pt_new)
     }
 }
 
-// 计算从参考图像到当前图像的仿射变换矩阵
+// 计算从参考图像到当前图像的仿射变换矩阵 //  A 矩阵
 void LidarSelector::getWarpMatrixAffine(
     const vk::AbstractCamera& cam,
     const Vector2d& px_ref,
@@ -1104,7 +1104,7 @@ void LidarSelector::detect(cv::Mat img, PointCloudXYZI::Ptr pg)
     double t4 = omp_get_wtime();
     
     // computeH = ekf_time = 0.0;
-    
+    // 状态更新
     ComputeJ(img);
 
     double t5 = omp_get_wtime();
@@ -1118,7 +1118,7 @@ void LidarSelector::detect(cv::Mat img, PointCloudXYZI::Ptr pg)
 
     printf("[ VIO ]: time: addFromSparseMap: %0.6f addSparseMap: %0.6f ComputeJ: %0.6f addObservation: %0.6f total time: %0.6f ave_total: %0.6f.\n"
     , t3-t1, t4-t3, t5-t4, t2-t5, t2-t1);
-
+    // 显示
     display_keypatch(t2-t1);
 } 
 

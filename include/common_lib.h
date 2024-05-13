@@ -23,7 +23,7 @@ using namespace Eigen;
 using namespace Sophus;
 
 // #define DEBUG_PRINT
-#define USE_ikdtree
+#define USE_ikdtree 
 // #define USE_ikdforest
 // #define USE_IKFOM
 // #define USE_FOV_Checker

@@ -20,7 +20,7 @@
 #include <svo/img_align/sparse_img_align_device_utils.cuh> //for CacheMemoryHandler
 
 namespace svo {
-
+// FloatTypeGpu float
 typedef Eigen::Matrix<FloatTypeGpu,3,1> Vector3ftGpu;
 
 struct HostCacheHandler

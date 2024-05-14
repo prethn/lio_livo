@@ -29,7 +29,7 @@
 #include <svo/img_align/frame_gpu.h>
 
 namespace svo {
-
+// 设置补丁大小、面积、边
 SparseImgAlignGpu::SparseImgAlignGpu(
     SolverOptions optimization_options,
     SparseImgAlignOptions options)
@@ -38,8 +38,9 @@ SparseImgAlignGpu::SparseImgAlignGpu(
   setPatchSize<SparseImgAlignGpu>(4);
 }
 
+
 size_t SparseImgAlignGpu::run(
-    const FrameBundle::Ptr& ref_frames,
+    const FrameBundle::Ptr& ref_frames,// 框架束
     const FrameBundle::Ptr& cur_frames)
 {
   CHECK(!ref_frames->empty());
@@ -48,8 +49,8 @@ size_t SparseImgAlignGpu::run(
   // Set member variables
   ref_frames_ = ref_frames;
   cur_frames_ = cur_frames;
-  T_iref_world_ = ref_frames->at(0)->T_imu_world();
-
+  T_iref_world_ = ref_frames->at(0)->T_imu_world();// at() 序列()
+// 转换为 GPU 数据类型。 要做的事：这应该只针对转换/相机数据完成
   // Transform to GPU datatypes. TODO: This should be done only ones for transformation/camera data
   int nbr_cameras = static_cast<int>(ref_frames->frames_.size());
   cu_ref_imgs_pyramid_copy_.resize(nbr_cameras);
@@ -58,35 +59,40 @@ size_t SparseImgAlignGpu::run(
   cu_T_cam_imu_bundle_.resize(nbr_cameras);
   cu_camera_bundle_.resize(nbr_cameras);
 
+// 检查 Gpu 帧以及 GPU 帧数据是否已初始化
+//    TOTO (mg)：修改稀疏图像对齐 GPU 函数以获取帧捆绑。
   // check if Gpu frame and if gpu frame data is initialized
   // TOTO (mg): modify sparse image align gpu function to take frame bundels.
+//   初始化金字塔（ |||  |||  ||| ）和相机模型
   if(dynamic_cast<FrameGpu*>(ref_frames->at(0).get()) == nullptr || !dynamic_cast<FrameGpu*>(ref_frames->at(0).get())->cu_camera_)
   {
 
     SVO_WARN_STREAM("Sparse image align: Input frame is not a GPU. Creating GPU data structures now.");
     // Input is not a GPU frame bundle. GPU datastructures need to be instantiated.
+    // 输入不是 GPU 帧束。 GPU 数据结构需要实例化。
     for(int i = 0; i < nbr_cameras; ++i)
     {
-      cu_ref_imgs_pyramid_copy_.at(i).resize(options_.max_level + 1);
+      cu_ref_imgs_pyramid_copy_.at(i).resize(options_.max_level + 1);// 
       cu_cur_imgs_pyramid_copy_.at(i).resize(options_.max_level + 1);
 
       for(int j = 0; j < static_cast<int>(cu_ref_imgs_pyramid_copy_.at(i).size()); ++j)
-      {
+      {  // 访问多层图像金字塔中的特定图像。
         cu_ref_imgs_pyramid_copy_.at(i).at(j) = std::make_shared<imp::cu::ImageGpu8uC1>(
               imp::cu::ImageGpu8uC1(imp::ImageCv8uC1(ref_frames_->frames_.at(i)->img_pyr_.at(j))));
         cu_cur_imgs_pyramid_copy_.at(i).at(j) = std::make_shared<imp::cu::ImageGpu8uC1>(
               imp::cu::ImageGpu8uC1(imp::ImageCv8uC1(cur_frames_->frames_.at(i)->img_pyr_.at(j))));
       }
-
+            // T_imu_cam 取出  <3,4 >
       cu_T_imu_cam_bundle_.at(i) = std::make_shared<imp::cu::Matrix<FloatTypeGpu,3,4> >(
             imp::cu::Matrix<FloatTypeGpu,3,4>(
               ref_frames->frames_.at(i)->T_imu_cam().getTransformationMatrix().block<3,4>(0,0).cast<FloatTypeGpu>()));
+            //   T_cam_imu 取出 <3,4>
       cu_T_cam_imu_bundle_.at(i) = std::make_shared<imp::cu::Matrix<FloatTypeGpu,3,4> >(
             imp::cu::Matrix<FloatTypeGpu,3,4>(
               ref_frames->frames_.at(i)->T_cam_imu().getTransformationMatrix().block<3,4>(0,0).cast<FloatTypeGpu>()));
 
       aslam::PinholeCamera* pinhole = dynamic_cast<aslam::PinholeCamera*>(ref_frames->frames_.at(i)->cam().get());
-
+    // 实例化成功后，输出相机内参
       if((pinhole != nullptr) && (pinhole->getDistortion().getType() == aslam::Distortion::Type::kNoDistortion))
       {
         cu_camera_bundle_.at(i) = std::make_shared<imp::cu::PinholeCamera>(
@@ -102,6 +108,7 @@ size_t SparseImgAlignGpu::run(
   }
   else
   {
+    // 输入是 GPU 帧束。 只需将 指针 复制到 GPU 数据即可。
     // Input is a GPU frame bundle. Simply copy the pointers to the GPU data.
     for(int i = 0; i < nbr_cameras; ++i)
     {
@@ -120,9 +127,10 @@ size_t SparseImgAlignGpu::run(
     }
   }
 
-  // Clear caches on host. Capacity remains unchanged.
+  // Clear caches on host. Capacity remains unchanged.（CPU）
   host_cache_.clear();
 
+// 如果需要，选择所有可见特征和子样本。
   // Select all visible features and subsample if required.
   size_t nbr_fts_to_track = 0;
   size_t nbr_extracted = 0;
@@ -164,7 +172,7 @@ size_t SparseImgAlignGpu::run(
   sparse_img_align_device_utils::computeNumBlocksAndThreadsReduction(host_cache_.total_nbr_of_ftrs,
                                                                      patch_area_,
                                                                      gpu_props_,
-                                                                     num_blocks_reduce_, num_threads_reduce_);
+                                                                     num_blocks_reduce_, num_threads_reduce_); 
 
 
   gpu_cache_.reserveReductionCacheCapacity(static_cast<size_t>(num_blocks_reduce_));

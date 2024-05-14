@@ -92,10 +92,15 @@ public:
     static_cast<derived*>(this)->setPatchSizeSideEffects();
   }
 
+/// 派生类必须指定必要的修改（例如内存分配）
+   /// 如果补丁大小改变。
   /// The derived class has to specify the necessary modifications (e.g. memory allocation)
   /// in case the patchsize is changed.
   virtual void setPatchSizeSideEffects() = 0;
 
+/// 设置用于对齐的特征数量。 如果数字 <= 0，则使用所有功能
+   /// 指定一个数字可以让您控制对齐的性能。
+   /// 运行超过 600 或 100 个特征的比对并没有多大区别
   /// Set number of features used for the alignment. If a number is <= 0 all features are used
   /// Specifying a number gives you the control about the performance of the alignment.
   /// Having an alignment running over 600 or 100 features doesn't make that much a difference

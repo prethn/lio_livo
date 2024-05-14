@@ -22,7 +22,7 @@
 #include <svo/common/seed.h>
 
 namespace svo {
-
+// 设置补丁大小、面积、边
 SparseImgAlign::SparseImgAlign(
     SolverOptions optimization_options,
     SparseImgAlignOptions options)

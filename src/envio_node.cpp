@@ -197,6 +197,7 @@ void process(){
             }
             else {
                 ros::Time start_time = ros::Time::now();
+
                 // INS prediction
                 for (auto &imu_msg : measurement.first) {
                     double now_imu_t = imu_msg->header.stamp.toSec();
@@ -224,6 +225,7 @@ void process(){
                     ->header.stamp.toSec();
                 estimator.propagate(measurement.first.back(), gap);
                 
+                // 状态估计
                 estimator.processMeasurement(measurement.second);
                 flag_update = true;
 

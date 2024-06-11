@@ -151,15 +151,15 @@ void sl_iekf::filterUpdate(std::vector<cv::Mat> pyr_uimg,
 
     bool is_break = false;
     ros::Time loop_start_time = ros::Time::now();
-    for (int yy = max_lvl_-1; yy >= 0; yy--) {
+    for (int yy = max_lvl_-1; yy >= 0; yy--) { // max_lvl_ = 3
         // Down scale images
-        double dfactor = pow(2,-yy);
-        double dmarg_size = dfactor * marg_size_;
-        cv::Mat uimg_l = pyr_uimg[yy];
+        double dfactor = pow(2,-yy); // 计算2的负yy次方
+        double dmarg_size = dfactor * marg_size_; // marg_size_ = 10
+        cv::Mat uimg_l = pyr_uimg[yy];  // 金字塔层级
         M3d Ky = dfactor * Kl;
         Ky(2,2) = 1;
         M3d Ky_inv = Ky.inverse();
-
+        // max_iter_ = 3 
         for (int iter = 0; iter < max_iter_; iter++) {
             // initialize big matrix
             int N_d = photo_map_.size();
@@ -250,7 +250,7 @@ void sl_iekf::filterUpdate(std::vector<cv::Mat> pyr_uimg,
                             double sl_x = 0.0;
                             double sl_y = 0.0;
                             bool is_sl = false;
-                            bool x_weak = fabs(dIx) < Ky(0,0)*thr_weak_;
+                            bool x_weak = fabs(dIx) < Ky(0,0)*thr_weak_; // thr_weak_ = 3.0
                             bool y_weak = fabs(dIy) < Ky(1,1)*thr_weak_;
 
                             if (x_weak || y_weak) {
@@ -1216,7 +1216,7 @@ void sl_iekf::publishPoseAndMap(const std_msgs::Header& header,
 void sl_iekf::sampleDeltaEnsembles(std::vector<V6d>& delta_T0,
     std::vector<V6d>& delta_T1, std::vector<double>& delta_Z) {
     
-    std::normal_distribution<double> sampler(0., 1.0);
+    std::normal_distribution<double> sampler(0., 1.0); // 正态分布对象,其平均值为0，标准差为1.0。
 
     double std_depth = sqrt(rho_var0_);
 
